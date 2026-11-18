@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail } from 'lucide-react-native';
+import { Link } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -22,7 +23,7 @@ const loginSchema = z.object({
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
-type Feedback = { type: 'error' | 'success' | 'info'; message: string };
+type Feedback = { type: 'error' | 'success'; message: string };
 
 export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
@@ -46,7 +47,7 @@ export default function LoginScreen() {
       await signIn(values);
       setFeedback({
         type: 'success',
-        message: 'The request was accepted. Connect session handling to finish sign-in.',
+        message: 'Sign-in request accepted. Session management still needs to be connected.',
       });
     } catch (error) {
       setFeedback({ type: 'error', message: getAuthErrorMessage(error, 'sign in') });
@@ -114,17 +115,11 @@ export default function LoginScreen() {
               onPress={() => setRememberMe((current) => !current)}
               label="Remember me"
             />
-            <Pressable
-              onPress={() =>
-                setFeedback({
-                  type: 'info',
-                  message: 'Password reset is available once the authentication service is connected.',
-                })
-              }
-              accessibilityRole="button"
-              hitSlop={8}>
-              <Text style={styles.forgotPassword}>Forgot Password?</Text>
-            </Pressable>
+            <Link href="/(auth)/forgot-password" asChild>
+              <Pressable accessibilityRole="link" hitSlop={8}>
+                <Text style={styles.forgotPassword}>Forgot Password?</Text>
+              </Pressable>
+            </Link>
           </View>
 
           <PrimaryButton

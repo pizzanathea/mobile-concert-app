@@ -39,7 +39,7 @@ export function PrimaryButton({ title, onPress, disabled = false, loading = fals
         accessibilityState={{ disabled: unavailable, busy: loading }}
         style={({ pressed }) => [styles.button, unavailable && styles.disabled, pressed && styles.pressed]}>
         {loading ? (
-          <ActivityIndicator color={AuthColors.background} />
+          <ActivityIndicator color={AuthColors.text} />
         ) : (
           <Text style={styles.title}>{title}</Text>
         )}

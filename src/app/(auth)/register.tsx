@@ -60,7 +60,7 @@ export default function RegisterScreen() {
       await register({ fullName, email, password });
       setFeedback({
         type: 'success',
-        message: 'The request was accepted. Connect account/session handling to finish registration.',
+        message: 'Registration request accepted. Account and session handling still need to be connected.',
       });
     } catch (error) {
       setFeedback({ type: 'error', message: getAuthErrorMessage(error, 'create your account') });

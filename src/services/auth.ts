@@ -11,9 +11,14 @@ export type RegisterPayload = {
   password: string;
 };
 
+export type PasswordResetPayload = {
+  email: string;
+};
+
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL;
 const loginPath = process.env.EXPO_PUBLIC_AUTH_LOGIN_PATH;
 const registerPath = process.env.EXPO_PUBLIC_AUTH_REGISTER_PATH;
+const passwordResetPath = process.env.EXPO_PUBLIC_AUTH_PASSWORD_RESET_PATH;
 
 // Configure these variables after confirming the paths with the backend owner.
 // Response parsing and session storage remain intentionally undefined until their contract exists.
@@ -57,7 +62,17 @@ export async function register(payload: RegisterPayload): Promise<void> {
   await authClient.post(requireAuthPath(registerPath, 'EXPO_PUBLIC_AUTH_REGISTER_PATH'), payload);
 }
 
-export function getAuthErrorMessage(error: unknown, action: 'sign in' | 'create your account'): string {
+export async function requestPasswordReset(payload: PasswordResetPayload): Promise<void> {
+  await authClient.post(
+    requireAuthPath(passwordResetPath, 'EXPO_PUBLIC_AUTH_PASSWORD_RESET_PATH'),
+    payload
+  );
+}
+
+export function getAuthErrorMessage(
+  error: unknown,
+  action: 'sign in' | 'create your account' | 'send reset instructions'
+): string {
   if (error instanceof AuthIntegrationError) {
     return error.message;
   }
