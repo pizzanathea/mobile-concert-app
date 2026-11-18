@@ -99,7 +99,7 @@ export default function RegisterScreen() {
   return (
     <AuthScreen title="Create Your Account">
       <View
-        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-6 py-[28px] sm:px-[38px]"
+        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-5 py-[25px] sm:px-8"
         style={{
           shadowColor: '#000000',
           shadowOffset: { width: 0, height: 1 },
@@ -114,7 +114,6 @@ export default function RegisterScreen() {
             inputRef={fullNameInput}
             onChangeText={(value) => updateField('fullName', value)}
             onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
-            placeholder="Full Name"
             autoCapitalize="words"
             autoComplete="name"
             returnKeyType="next"
@@ -128,7 +127,6 @@ export default function RegisterScreen() {
             inputRef={emailInput}
             onChangeText={(value) => updateField('email', value)}
             onBlur={() => setTouched((current) => ({ ...current, email: true }))}
-            placeholder="Email Address"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -144,7 +142,6 @@ export default function RegisterScreen() {
             inputRef={passwordInput}
             onChangeText={(value) => updateField('password', value)}
             onBlur={() => setTouched((current) => ({ ...current, password: true }))}
-            placeholder="At least 8 characters"
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="new-password"
@@ -159,7 +156,6 @@ export default function RegisterScreen() {
             inputRef={confirmPasswordInput}
             onChangeText={(value) => updateField('confirmPassword', value)}
             onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
-            placeholder="Confirm Password"
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="new-password"

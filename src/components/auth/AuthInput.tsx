@@ -19,7 +19,6 @@ type AuthInputProps = Omit<
   label: string;
   value: string;
   error?: string;
-  leftIcon?: ReactNode;
   rightElement?: ReactNode;
   inputRef?: Ref<TextInputRef>;
 };
@@ -28,7 +27,6 @@ export function AuthInput({
   label,
   value,
   error,
-  leftIcon,
   rightElement,
   inputRef,
   onFocus,
@@ -60,43 +58,43 @@ export function AuthInput({
   return (
     <View>
       <Animated.View
-        className="relative h-[44px] border-b bg-transparent"
+        className="relative h-10 flex-row items-center border-b bg-transparent"
         style={[animatedBorderStyle, error && !focused && { borderColor: AuthColors.error }]}>
-        <Host matchContents style={{ width: '100%', height: 44 }}>
-          <ExpoTextInput
-            {...inputProps}
-            ref={inputRef}
-            defaultValue={value}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            style={{
-              width: '100%',
-              height: 44,
-              paddingVertical: 10,
-              paddingLeft: leftIcon ? 32 : 0,
-              paddingRight: rightElement ? 38 : 0,
-              backgroundColor: 'transparent',
-              borderRadius: 0,
-              borderWidth: 0,
-            }}
-            textStyle={{ color: AuthColors.text, fontSize: 14, fontFamily: 'Arial' }}
-            placeholderTextColor={AuthColors.muted}
-            accessibilityLabel={label}
-            selectionColor={AuthColors.primary}
-          />
-        </Host>
-        {leftIcon ? (
-          <View
-            pointerEvents="none"
-            className="absolute left-1 top-0 h-[44px] items-center justify-center">
-            {leftIcon}
-          </View>
-        ) : null}
-        {rightElement ? (
-          <View className="absolute right-0 top-0 h-[44px] items-center justify-center">
-            {rightElement}
-          </View>
-        ) : null}
+        <Text
+          className="w-[68px] shrink-0 text-[12px] leading-4 text-[#777777]"
+          style={{ fontFamily: 'Arial' }}>
+          {label}
+        </Text>
+        <View className="relative h-10 flex-1">
+          <Host matchContents style={{ width: '100%', height: 40 }}>
+            <ExpoTextInput
+              {...inputProps}
+              ref={inputRef}
+              defaultValue={value}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              style={{
+                width: '100%',
+                height: 40,
+                paddingVertical: 8,
+                paddingLeft: 0,
+                paddingRight: rightElement ? 32 : 0,
+                backgroundColor: 'transparent',
+                borderRadius: 0,
+                borderWidth: 0,
+              }}
+              textStyle={{ color: AuthColors.text, fontSize: 13, fontFamily: 'Arial' }}
+              placeholderTextColor={AuthColors.muted}
+              accessibilityLabel={label}
+              selectionColor={AuthColors.primary}
+            />
+          </Host>
+          {rightElement ? (
+            <View className="absolute right-0 top-0 h-10 items-center justify-center">
+              {rightElement}
+            </View>
+          ) : null}
+        </View>
       </Animated.View>
       {error ? (
         <Text className="text-xs text-[#DC2626]" accessibilityLiveRegion="polite">

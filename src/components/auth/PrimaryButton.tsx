@@ -25,7 +25,7 @@ export function PrimaryButton({ title, onPress, disabled = false, loading = fals
   const unavailable = disabled || loading;
 
   return (
-    <Animated.View     className="mt-[24px]" style={animatedStyle}>
+    <Animated.View className="mt-[18px]" style={animatedStyle}>
       <Pressable
         onPress={onPress}
         disabled={unavailable}
@@ -37,7 +37,7 @@ export function PrimaryButton({ title, onPress, disabled = false, loading = fals
         }}
         accessibilityRole="button"
         accessibilityState={{ disabled: unavailable, busy: loading }}
-        className={`h-9 items-center justify-center border border-[#222222] bg-white ${
+        className={`h-8 items-center justify-center border border-[#222222] bg-white ${
           unavailable ? 'opacity-70' : 'active:opacity-90'
         }`}>
         {loading ? (

@@ -64,7 +64,7 @@ export default function LoginScreen() {
   return (
     <AuthScreen title="Login to Your Account">
       <View
-        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-6 py-[28px] sm:px-[38px]"
+        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-5 py-[25px] sm:px-8"
         style={{
           shadowColor: '#000000',
           shadowOffset: { width: 0, height: 1 },
@@ -72,14 +72,13 @@ export default function LoginScreen() {
           shadowRadius: 3,
           elevation: 2,
         }}>
-        <View className="gap-[14px]">
+        <View className="gap-2">
           <AuthInput
             label="Email"
             value={values.email}
             inputRef={emailInput}
             onChangeText={(value) => updateField('email', value)}
             onBlur={() => setTouched((current) => ({ ...current, email: true }))}
-            placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
@@ -95,7 +94,6 @@ export default function LoginScreen() {
             inputRef={passwordInput}
             onChangeText={(value) => updateField('password', value)}
             onBlur={() => setTouched((current) => ({ ...current, password: true }))}
-            placeholder="Password"
             autoCapitalize="none"
             autoCorrect={false}
             autoComplete="current-password"
@@ -110,7 +108,7 @@ export default function LoginScreen() {
             disabled={!isValid}
             loading={isSubmitting}
           />
-          <View className="mt-[24px] items-center">
+          <View className="mt-[14px] items-center">
             <Link href="/(auth)/forgot-password" asChild>
               <Pressable accessibilityRole="link" hitSlop={8}>
                 <Text

@@ -48,7 +48,7 @@ export default function ForgotPasswordScreen() {
       title="Reset Your Password"
       description="Enter the email address associated with your account.">
       <View
-        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-6 py-[28px] sm:px-[38px]"
+        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-5 py-[25px] sm:px-8"
         style={{
           shadowColor: '#000000',
           shadowOffset: { width: 0, height: 1 },
@@ -66,7 +66,6 @@ export default function ForgotPasswordScreen() {
               setFeedback(null);
             }}
             onBlur={() => setTouched(true)}
-            placeholder="you@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
