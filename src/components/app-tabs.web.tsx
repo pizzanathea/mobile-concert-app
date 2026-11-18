@@ -1,132 +1,130 @@
 import {
-  Tabs,
   TabList,
-  TabTrigger,
   TabSlot,
-  TabTriggerSlotProps,
-  TabListProps,
+  TabTrigger,
+  Tabs,
+  type TabTriggerSlotProps,
 } from 'expo-router/ui';
-import { SymbolView } from 'expo-symbols';
-import type { ReactNode } from 'react';
-import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
-
-import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
-
-import { ExternalLink } from './external-link';
-import { ThemedText } from './themed-text';
-import { ThemedView } from './themed-view';
+import { Compass, House, type LucideIcon } from 'lucide-react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AppTabs() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
-      <TabList>
-        <CustomTabList>
-          <TabTrigger name="home" href="/" asChild>
-            <TabButton>Home</TabButton>
-          </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
-          </TabTrigger>
-        </CustomTabList>
+      <View
+        pointerEvents="none"
+        style={[styles.brandOverlay, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+        <View style={styles.brandContent}>
+          <View style={styles.wordmarkMark}>
+            <Text style={styles.wordmarkZ}>Z</Text>
+          </View>
+          <Text style={styles.wordmarkText}>FEST</Text>
+        </View>
+      </View>
+      <TabList style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+        <TabTrigger name="home" href="/" asChild>
+          <TabButton icon={House}>Home</TabButton>
+        </TabTrigger>
+        <TabTrigger name="explore" href="/explore" asChild>
+          <TabButton icon={Compass}>Explore</TabButton>
+        </TabTrigger>
       </TabList>
     </Tabs>
   );
 }
 
 type TabButtonProps = Omit<TabTriggerSlotProps, 'ref'> & {
-  children?: ReactNode;
+  children?: string;
+  icon: LucideIcon;
   isFocused?: boolean;
 };
 
-export function TabButton({ children, isFocused, ...props }: TabButtonProps) {
-  const { style, ...rest } = props as {
-    style?: any;
-    [key: string]: any;
-  };
+function TabButton({ children, icon: Icon, isFocused, ...props }: TabButtonProps) {
+  const color = isFocused ? '#FBBF24' : '#A1A1AA';
 
   return (
     <Pressable
-      {...rest}
-      style={({ pressed }) => [style, pressed && styles.pressed]}>
-      <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.tabButtonView}>
-        <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
-          {children}
-        </ThemedText>
-      </ThemedView>
+      {...props}
+      accessibilityRole="tab"
+      style={({ pressed }) => [styles.tabButton, pressed && styles.pressed]}>
+      <Icon color={color} size={17} strokeWidth={2} />
+      <Text style={[styles.tabLabel, { color }]}>{children}</Text>
     </Pressable>
   );
 }
 
-type CustomTabListProps = {
-  children?: ReactNode;
-};
-
-export function CustomTabList({ children }: CustomTabListProps) {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
-
-  return (
-    <View style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={styles.innerContainer}>
-        <ThemedText type="smallBold" style={styles.brandText}>
-          Expo Starter
-        </ThemedText>
-
-        {children}
-
-        <ExternalLink href="https://docs.expo.dev" asChild>
-          <Pressable style={styles.externalPressable}>
-            <ThemedText type="link">Docs</ThemedText>
-            <SymbolView
-              tintColor={colors.text}
-              name={{ ios: 'arrow.up.right.square', web: 'link' }}
-              size={12}
-            />
-          </Pressable>
-        </ExternalLink>
-      </ThemedView>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  tabListContainer: {
+  tabBar: {
     position: 'absolute',
+    right: 0,
+    bottom: 0,
+    left: 0,
+    maxWidth: 640,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#303030',
+    backgroundColor: '#0B0B0B',
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingLeft: 100,
+  },
+  brandOverlay: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#303030',
+    backgroundColor: '#0B0B0B',
+    paddingTop: 10,
+    paddingHorizontal: 20,
+  },
+  brandContent: {
     width: '100%',
-    padding: Spacing.three,
+    maxWidth: 640,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  wordmarkMark: {
+    width: 23,
+    height: 23,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
+    borderRadius: 12,
+    backgroundColor: '#FBBF24',
+    marginRight: 7,
   },
-  innerContainer: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
-    borderRadius: Spacing.five,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexGrow: 1,
-    gap: Spacing.two,
-    maxWidth: MaxContentWidth,
+  wordmarkZ: {
+    color: '#0B0B0B',
+    fontSize: 13,
+    fontWeight: '900',
   },
-  brandText: {
-    marginRight: 'auto',
+  wordmarkText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1.6,
+  },
+  tabButton: {
+    minWidth: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingVertical: 2,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   pressed: {
-    opacity: 0.7,
-  },
-  tabButtonView: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.three,
-  },
-  externalPressable: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: Spacing.one,
-    marginLeft: Spacing.three,
+    opacity: 0.65,
   },
 });
