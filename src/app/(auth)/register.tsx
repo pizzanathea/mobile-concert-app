@@ -1,195 +1,191 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, UserRound } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, Text, View } from 'react-native';
-import type { TextInputInstance } from 'react-native';
-import { z } from 'zod';
+import { Text, View } from 'react-native';
+import type { TextInputRef } from '@expo/ui';
 
 import { AuthCheckbox } from '@/components/auth/AuthCheckbox';
 import { AuthFooter } from '@/components/auth/AuthFooter';
-import { AuthHeader } from '@/components/auth/AuthHeader';
 import { AuthInput } from '@/components/auth/AuthInput';
 import { AuthScreen } from '@/components/auth/AuthScreen';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { PrimaryButton } from '@/components/auth/PrimaryButton';
-import { AuthColors, AuthFonts } from '@/components/auth/theme';
+import { getEmailError } from '@/components/auth/validation';
 import { getAuthErrorMessage, register } from '@/services/auth';
 
-const registerSchema = z
-  .object({
-    fullName: z.string().trim().min(2, 'Enter your full name.'),
-    email: z.string().trim().min(1, 'Enter your email address.').email('Enter a valid email address.'),
-    password: z.string().min(8, 'Use at least 8 characters for your password.'),
-    confirmPassword: z.string().min(1, 'Confirm your password.'),
-    acceptedTerms: z.boolean().refine((accepted) => accepted, 'You must accept the terms to continue.'),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    path: ['confirmPassword'],
-    message: 'Your passwords do not match.',
-  });
+type RegisterValues = {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  acceptedTerms: boolean;
+};
 
-type RegisterValues = z.infer<typeof registerSchema>;
+type RegisterField = keyof RegisterValues;
 type Feedback = { type: 'error' | 'success'; message: string };
 
-export default function RegisterScreen() {
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const emailInput = useRef<TextInputInstance>(null);
-  const passwordInput = useRef<TextInputInstance>(null);
-  const confirmPasswordInput = useRef<TextInputInstance>(null);
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
-    mode: 'onChange',
-    defaultValues: {
-      fullName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      acceptedTerms: false,
-    },
-  });
+function validate(values: RegisterValues) {
+  const fullName = values.fullName.trim().length >= 2 ? undefined : 'Enter your full name.';
+  const email = getEmailError(values.email);
+  const password =
+    values.password.length >= 8 ? undefined : 'Use at least 8 characters for your password.';
+  const confirmPassword = !values.confirmPassword
+    ? 'Confirm your password.'
+    : values.password !== values.confirmPassword
+      ? 'Your passwords do not match.'
+      : undefined;
+  const acceptedTerms = values.acceptedTerms
+    ? undefined
+    : 'You must accept the terms to continue.';
 
-  const onSubmit = async ({ fullName, email, password }: RegisterValues) => {
+  return { fullName, email, password, confirmPassword, acceptedTerms };
+}
+
+export default function RegisterScreen() {
+  const [values, setValues] = useState<RegisterValues>({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    acceptedTerms: false,
+  });
+  const [touched, setTouched] = useState<Partial<Record<RegisterField, boolean>>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const fullNameInput = useRef<TextInputRef>(null);
+  const emailInput = useRef<TextInputRef>(null);
+  const passwordInput = useRef<TextInputRef>(null);
+  const confirmPasswordInput = useRef<TextInputRef>(null);
+
+  const errors = validate(values);
+  const isValid = Object.values(errors).every((error) => !error);
+  const visibleError = (field: RegisterField) =>
+    submitted || touched[field] ? errors[field] : undefined;
+
+  const updateField = <Field extends RegisterField>(
+    field: Field,
+    value: RegisterValues[Field]
+  ) => {
+    setValues((current) => ({ ...current, [field]: value }));
     setFeedback(null);
+  };
+
+  const onSubmit = async () => {
+    setSubmitted(true);
+    if (!isValid) {
+      return;
+    }
+
+    setFeedback(null);
+    setIsSubmitting(true);
 
     try {
-      await register({ fullName, email, password });
+      await register({
+        fullName: values.fullName.trim(),
+        email: values.email.trim(),
+        password: values.password,
+      });
       setFeedback({
         type: 'success',
-        message: 'Registration request accepted. Account and session handling still need to be connected.',
+        message:
+          'Registration request accepted. Account and session handling still need to be connected.',
       });
     } catch (error) {
       setFeedback({ type: 'error', message: getAuthErrorMessage(error, 'create your account') });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <AuthScreen>
-      <AuthHeader
-        title="Create Your Account"
-        description=""
-      />
-
-      <View style={styles.formCard}>
-        <View style={styles.form}>
-          <Controller
-            control={control}
-            name="fullName"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <AuthInput
-                label="Full Name"
-                value={value}
-                onSubmitEditing={() => emailInput.current?.focus()}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                leftIcon={<UserRound size={18} color={AuthColors.textSecondary} strokeWidth={1.8} />}
-                placeholder="Full Name"
-                autoCapitalize="words"
-                autoComplete="name"
-                textContentType="name"
-                returnKeyType="next"
-                error={errors.fullName?.message}
-              />
-            )}
+    <AuthScreen title="Create Your Account">
+      <View
+        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-6 py-[28px] sm:px-[38px]"
+        style={{
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 2,
+        }}>
+        <View className="gap-3">
+          <AuthInput
+            label="Full Name"
+            value={values.fullName}
+            inputRef={fullNameInput}
+            onChangeText={(value) => updateField('fullName', value)}
+            onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
+            placeholder="Full Name"
+            autoCapitalize="words"
+            autoComplete="name"
+            returnKeyType="next"
+            onSubmitEditing={() => emailInput.current?.focus()}
+            error={visibleError('fullName')}
           />
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <AuthInput
-                label="Email Address"
-                value={value}
-                inputRef={emailInput}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                leftIcon={<Mail size={18} color={AuthColors.textSecondary} strokeWidth={1.8} />}
-                placeholder="Email Address"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                textContentType="emailAddress"
-                returnKeyType="next"
-                onSubmitEditing={() => passwordInput.current?.focus()}
-                error={errors.email?.message}
-              />
-            )}
+          <AuthInput
+            label="Email Address"
+            value={values.email}
+            inputRef={emailInput}
+            onChangeText={(value) => updateField('email', value)}
+            onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+            placeholder="Email Address"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordInput.current?.focus()}
+            error={visibleError('email')}
           />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <PasswordInput
-                label="Password"
-                value={value}
-                inputRef={passwordInput}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                placeholder="Password"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="new-password"
-                textContentType="newPassword"
-                returnKeyType="next"
-                onSubmitEditing={() => confirmPasswordInput.current?.focus()}
-                error={errors.password?.message}
-              />
-            )}
+          <PasswordInput
+            label="Password"
+            value={values.password}
+            inputRef={passwordInput}
+            onChangeText={(value) => updateField('password', value)}
+            onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+            placeholder="At least 8 characters"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="new-password"
+            returnKeyType="next"
+            onSubmitEditing={() => confirmPasswordInput.current?.focus()}
+            error={visibleError('password')}
           />
 
-          <Controller
-            control={control}
-            name="confirmPassword"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <PasswordInput
-                label="Confirm Password"
-                value={value}
-                inputRef={confirmPasswordInput}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                placeholder="Confirm Password"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="new-password"
-                textContentType="newPassword"
-                returnKeyType="done"
-                onSubmitEditing={() => void handleSubmit(onSubmit)()}
-                error={errors.confirmPassword?.message}
-              />
-            )}
+          <PasswordInput
+            label="Confirm Password"
+            value={values.confirmPassword}
+            inputRef={confirmPasswordInput}
+            onChangeText={(value) => updateField('confirmPassword', value)}
+            onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
+            placeholder="Confirm Password"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="new-password"
+            returnKeyType="done"
+            onSubmitEditing={() => void onSubmit()}
+            error={visibleError('confirmPassword')}
           />
 
-          <Controller
-            control={control}
-            name="acceptedTerms"
-            render={({ field: { onChange, value } }) => (
-              <AuthCheckbox
-                checked={value}
-                onPress={() => onChange(!value)}
-                label="I agree to the Z FEST terms and privacy policy."
-                error={errors.acceptedTerms?.message}
-              />
-            )}
+          <AuthCheckbox
+            checked={values.acceptedTerms}
+            onPress={() => updateField('acceptedTerms', !values.acceptedTerms)}
+            label="I agree to the Z FEST terms and privacy policy."
+            error={visibleError('acceptedTerms')}
           />
 
           <PrimaryButton
             title="CREATE ACCOUNT"
-            onPress={handleSubmit(onSubmit)}
+            onPress={() => void onSubmit()}
             disabled={!isValid}
             loading={isSubmitting}
           />
           {feedback ? (
             <Text
-              style={[
-                styles.feedback,
-                feedback.type === 'error' ? styles.feedbackError : styles.feedbackSuccess,
-              ]}
+              className={`text-center text-xs leading-[18px] ${
+                feedback.type === 'error' ? 'text-[#DC2626]' : 'text-[#15803D]'
+              }`}
               accessibilityLiveRegion="polite">
               {feedback.message}
             </Text>
@@ -205,30 +201,3 @@ export default function RegisterScreen() {
     </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  formCard: {
-    backgroundColor: '#E6E6E6',
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderColor: '#E1E1E1',
-  },
-  form: {
-    gap: 16,
-  },
-  feedback: {
-    color: AuthColors.textSecondary,
-    fontFamily: AuthFonts.body,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  feedbackError: {
-    color: AuthColors.error,
-  },
-  feedbackSuccess: {
-    color: AuthColors.success,
-  },
-});

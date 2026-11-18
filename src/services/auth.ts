@@ -1,5 +1,3 @@
-import { create, isAxiosError } from 'axios';
-
 export type LoginPayload = {
   email: string;
   password: string;
@@ -15,26 +13,31 @@ export type PasswordResetPayload = {
   email: string;
 };
 
+type AuthPayload = LoginPayload | RegisterPayload | PasswordResetPayload;
+
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL;
 const loginPath = process.env.EXPO_PUBLIC_AUTH_LOGIN_PATH;
 const registerPath = process.env.EXPO_PUBLIC_AUTH_REGISTER_PATH;
 const passwordResetPath = process.env.EXPO_PUBLIC_AUTH_PASSWORD_RESET_PATH;
 
-// Configure these variables after confirming the paths with the backend owner.
-// Response parsing and session storage remain intentionally undefined until their contract exists.
-const authClient = create({
-  baseURL: apiBaseUrl,
-  timeout: 15_000,
-  headers: {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  },
-});
-
 export class AuthIntegrationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'AuthIntegrationError';
+  }
+}
+
+class AuthRequestError extends Error {
+  constructor() {
+    super('The authentication service rejected the request.');
+    this.name = 'AuthRequestError';
+  }
+}
+
+class AuthNetworkError extends Error {
+  constructor() {
+    super('Unable to reach the authentication service.');
+    this.name = 'AuthNetworkError';
   }
 }
 
@@ -51,19 +54,44 @@ function requireAuthPath(path: string | undefined, variableName: string): string
     );
   }
 
-  return path;
+  return `${apiBaseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+}
+
+async function postJson(path: string, payload: AuthPayload): Promise<void> {
+  let response: Response;
+
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new AuthNetworkError();
+    }
+
+    throw error;
+  }
+
+  if (!response.ok) {
+    throw new AuthRequestError();
+  }
 }
 
 export async function signIn(payload: LoginPayload): Promise<void> {
-  await authClient.post(requireAuthPath(loginPath, 'EXPO_PUBLIC_AUTH_LOGIN_PATH'), payload);
+  await postJson(requireAuthPath(loginPath, 'EXPO_PUBLIC_AUTH_LOGIN_PATH'), payload);
 }
 
 export async function register(payload: RegisterPayload): Promise<void> {
-  await authClient.post(requireAuthPath(registerPath, 'EXPO_PUBLIC_AUTH_REGISTER_PATH'), payload);
+  await postJson(requireAuthPath(registerPath, 'EXPO_PUBLIC_AUTH_REGISTER_PATH'), payload);
 }
 
 export async function requestPasswordReset(payload: PasswordResetPayload): Promise<void> {
-  await authClient.post(
+  await postJson(
     requireAuthPath(passwordResetPath, 'EXPO_PUBLIC_AUTH_PASSWORD_RESET_PATH'),
     payload
   );
@@ -77,10 +105,12 @@ export function getAuthErrorMessage(
     return error.message;
   }
 
-  if (isAxiosError(error)) {
-    return error.response
-      ? `We couldn't ${action}. Check your details and try again.`
-      : 'Unable to reach the authentication service. Check your connection and try again.';
+  if (error instanceof AuthNetworkError) {
+    return 'Unable to reach the authentication service. Check your connection and try again.';
+  }
+
+  if (error instanceof AuthRequestError) {
+    return `We couldn't ${action}. Check your details and try again.`;
   }
 
   return `Something went wrong while trying to ${action}. Please try again.`;

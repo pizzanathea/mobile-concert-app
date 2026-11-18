@@ -1,16 +1,21 @@
-import { Eye, EyeOff, LockKeyhole } from 'lucide-react-native';
+import type { TextInputProps, TextInputRef } from '@expo/ui';
+import { Eye, EyeOff } from 'lucide-react-native';
 import { useState } from 'react';
 import type { Ref } from 'react';
-import { Pressable, StyleSheet, type TextInputInstance, type TextInputProps } from 'react-native';
+import { Pressable } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { AuthInput } from './AuthInput';
 import { AuthColors } from './theme';
 
-type PasswordInputProps = Omit<TextInputProps, 'secureTextEntry' | 'style'> & {
+type PasswordInputProps = Omit<
+  TextInputProps,
+  'defaultValue' | 'ref' | 'secureTextEntry' | 'style' | 'textStyle' | 'value'
+> & {
   label: string;
+  value: string;
   error?: string;
-  inputRef?: Ref<TextInputInstance>;
+  inputRef?: Ref<TextInputRef>;
 };
 
 export function PasswordInput({ label, error, ...inputProps }: PasswordInputProps) {
@@ -31,15 +36,15 @@ export function PasswordInput({ label, error, ...inputProps }: PasswordInputProp
       {...inputProps}
       label={label}
       error={error}
-      leftIcon={<LockKeyhole size={18} color={AuthColors.textSecondary} strokeWidth={1.8} />}
       secureTextEntry={!visible}
       rightElement={
         <Pressable
           onPress={toggleVisibility}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}>
-          <Animated.View style={[styles.visibilityIcon, visibilityStyle]}>
+          accessibilityLabel={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          className="h-10 w-10 items-center justify-center">
+          <Animated.View style={visibilityStyle}>
             {visible ? (
               <EyeOff size={18} color={AuthColors.textSecondary} strokeWidth={1.9} />
             ) : (
@@ -51,10 +56,3 @@ export function PasswordInput({ label, error, ...inputProps }: PasswordInputProp
     />
   );
 }
-
-const styles = StyleSheet.create({
-  visibilityIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

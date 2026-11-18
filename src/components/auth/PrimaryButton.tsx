@@ -1,7 +1,7 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, Text } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { AuthColors, AuthFonts } from './theme';
+import { AuthColors } from './theme';
 
 type PrimaryButtonProps = {
   title: string;
@@ -25,7 +25,7 @@ export function PrimaryButton({ title, onPress, disabled = false, loading = fals
   const unavailable = disabled || loading;
 
   return (
-    <Animated.View style={[styles.wrapper, animatedStyle]}>
+    <Animated.View     className="mt-[24px]" style={animatedStyle}>
       <Pressable
         onPress={onPress}
         disabled={unavailable}
@@ -37,40 +37,19 @@ export function PrimaryButton({ title, onPress, disabled = false, loading = fals
         }}
         accessibilityRole="button"
         accessibilityState={{ disabled: unavailable, busy: loading }}
-        style={({ pressed }) => [styles.button, unavailable && styles.disabled, pressed && styles.pressed]}>
+        className={`h-9 items-center justify-center border border-[#222222] bg-white ${
+          unavailable ? 'opacity-70' : 'active:opacity-90'
+        }`}>
         {loading ? (
           <ActivityIndicator color={AuthColors.text} />
         ) : (
-          <Text style={styles.title}>{title}</Text>
+          <Text
+            className="text-[12px] font-bold tracking-[1px] text-[#111111]"
+            style={{ fontFamily: 'Arial' }}>
+            {title}
+          </Text>
         )}
       </Pressable>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    marginTop: 8,
-  },
-  button: {
-    minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#111111',
-    backgroundColor: '#F5F5F5',
-  },
-  disabled: {
-    opacity: 0.42,
-  },
-  pressed: {
-    opacity: 0.9,
-  },
-  title: {
-    color: '#111111',
-    fontFamily: AuthFonts.bodyBold,
-    fontSize: 13,
-    letterSpacing: 1.5,
-  },
-});

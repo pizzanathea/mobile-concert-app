@@ -4,6 +4,8 @@ import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 
+import '../../global.css';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

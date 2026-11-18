@@ -1,8 +1,6 @@
 import type { Href } from 'expo-router';
 import { Link } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-
-import { AuthColors, AuthFonts } from './theme';
+import { Pressable, Text, View } from 'react-native';
 
 type AuthFooterProps = {
   prompt: string;
@@ -12,34 +10,13 @@ type AuthFooterProps = {
 
 export function AuthFooter({ prompt, linkText, href }: AuthFooterProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.prompt}>{prompt}</Text>
+    <View className="mt-[22px] flex-row flex-wrap items-center justify-center gap-[5px]">
+      <Text className="text-[13px] text-[#4B4B4B]">{prompt}</Text>
       <Link href={href} asChild>
         <Pressable accessibilityRole="link" hitSlop={8}>
-          <Text style={styles.link}>{linkText}</Text>
+          <Text className="text-[13px] font-bold text-[#FF9900]">{linkText}</Text>
         </Pressable>
       </Link>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 5,
-    marginTop: 22,
-  },
-  prompt: {
-    color: AuthColors.textSecondary,
-    fontFamily: AuthFonts.body,
-    fontSize: 13,
-  },
-  link: {
-    color: AuthColors.primary,
-    fontFamily: AuthFonts.bodyBold,
-    fontSize: 13,
-  },
-});

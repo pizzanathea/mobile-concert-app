@@ -1,5 +1,7 @@
+import { Host, TextInput as ExpoTextInput } from '@expo/ui';
+import type { TextInputProps, TextInputRef } from '@expo/ui';
 import { useState, type ReactNode, type Ref } from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
+import { Text, View } from 'react-native';
 import Animated, {
   Easing,
   interpolateColor,
@@ -8,18 +10,23 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { AuthColors, AuthFonts } from './theme';
+import { AuthColors } from './theme';
 
-type AuthInputProps = Omit<TextInputProps, 'style'> & {
+type AuthInputProps = Omit<
+  TextInputProps,
+  'defaultValue' | 'ref' | 'style' | 'textStyle' | 'value'
+> & {
   label: string;
+  value: string;
   error?: string;
   leftIcon?: ReactNode;
   rightElement?: ReactNode;
-  inputRef?: Ref<TextInputInstance>;
+  inputRef?: Ref<TextInputRef>;
 };
 
 export function AuthInput({
   label,
+  value,
   error,
   leftIcon,
   rightElement,
@@ -38,88 +45,64 @@ export function AuthInput({
     ),
   }));
 
-  const handleFocus: TextInputProps['onFocus'] = (event) => {
+  const handleFocus: TextInputProps['onFocus'] = () => {
     setFocused(true);
     focusProgress.set(withTiming(1, { duration: 180, easing: Easing.linear }));
-    onFocus?.(event);
+    onFocus?.();
   };
 
-  const handleBlur: TextInputProps['onBlur'] = (event) => {
+  const handleBlur: TextInputProps['onBlur'] = () => {
     setFocused(false);
     focusProgress.set(withTiming(0, { duration: 180, easing: Easing.linear }));
-    onBlur?.(event);
+    onBlur?.();
   };
 
   return (
-    <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+    <View>
       <Animated.View
-        style={[
-          styles.inputContainer,
-          animatedBorderStyle,
-          focused && styles.inputContainerFocused,
-          error && !focused && styles.inputContainerError,
-        ]}>
-        {leftIcon}
-        <TextInput
-          {...inputProps}
-          ref={inputRef}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          style={styles.input}
-          placeholderTextColor={AuthColors.muted}
-          accessibilityLabel={label}
-          selectionColor={AuthColors.primary}
-        />
-        {rightElement}
+        className="relative h-[44px] border-b bg-transparent"
+        style={[animatedBorderStyle, error && !focused && { borderColor: AuthColors.error }]}>
+        <Host matchContents style={{ width: '100%', height: 44 }}>
+          <ExpoTextInput
+            {...inputProps}
+            ref={inputRef}
+            defaultValue={value}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            style={{
+              width: '100%',
+              height: 44,
+              paddingVertical: 10,
+              paddingLeft: leftIcon ? 32 : 0,
+              paddingRight: rightElement ? 38 : 0,
+              backgroundColor: 'transparent',
+              borderRadius: 0,
+              borderWidth: 0,
+            }}
+            textStyle={{ color: AuthColors.text, fontSize: 14, fontFamily: 'Arial' }}
+            placeholderTextColor={AuthColors.muted}
+            accessibilityLabel={label}
+            selectionColor={AuthColors.primary}
+          />
+        </Host>
+        {leftIcon ? (
+          <View
+            pointerEvents="none"
+            className="absolute left-1 top-0 h-[44px] items-center justify-center">
+            {leftIcon}
+          </View>
+        ) : null}
+        {rightElement ? (
+          <View className="absolute right-0 top-0 h-[44px] items-center justify-center">
+            {rightElement}
+          </View>
+        ) : null}
       </Animated.View>
       {error ? (
-        <Text style={styles.error} accessibilityLiveRegion="polite">
+        <Text className="text-xs text-[#DC2626]" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : null}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  field: {
-    gap: 8,
-  },
-  label: {
-    color: AuthColors.textSecondary,
-    fontFamily: AuthFonts.bodyBold,
-    fontSize: 10,
-    letterSpacing: 1.2,
-  },
-  inputContainer: {
-    minHeight: 54,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderRadius: 10,
-    borderColor: '#DADADA',
-    backgroundColor: '#E7E7E7',
-  },
-  inputContainerFocused: {
-    backgroundColor: '#E7E7E7',
-    borderColor: '#111111',
-  },
-  inputContainerError: {
-    borderColor: AuthColors.error,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 14,
-    color: AuthColors.text,
-    fontFamily: AuthFonts.body,
-    fontSize: 15,
-  },
-  error: {
-    color: AuthColors.error,
-    fontFamily: AuthFonts.body,
-    fontSize: 12,
-  },
-});

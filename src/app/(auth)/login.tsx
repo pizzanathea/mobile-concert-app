@@ -1,140 +1,131 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail } from 'lucide-react-native';
 import { Link } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { TextInputInstance } from 'react-native';
-import { z } from 'zod';
+import { Pressable, Text, View } from 'react-native';
+import type { TextInputRef } from '@expo/ui';
 
-import { AuthCheckbox } from '@/components/auth/AuthCheckbox';
 import { AuthFooter } from '@/components/auth/AuthFooter';
-import { AuthHeader } from '@/components/auth/AuthHeader';
 import { AuthInput } from '@/components/auth/AuthInput';
 import { AuthScreen } from '@/components/auth/AuthScreen';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { PrimaryButton } from '@/components/auth/PrimaryButton';
-import { AuthColors, AuthFonts } from '@/components/auth/theme';
+import { getEmailError } from '@/components/auth/validation';
 import { getAuthErrorMessage, signIn } from '@/services/auth';
 
-const loginSchema = z.object({
-  email: z.string().trim().min(1, 'Enter your email address.').email('Enter a valid email address.'),
-  password: z.string().min(1, 'Enter your password.'),
-});
+type LoginValues = {
+  email: string;
+  password: string;
+};
 
-type LoginValues = z.infer<typeof loginSchema>;
+type LoginField = keyof LoginValues;
 type Feedback = { type: 'error' | 'success'; message: string };
 
 export default function LoginScreen() {
-  const [rememberMe, setRememberMe] = useState(false);
+  const [values, setValues] = useState<LoginValues>({ email: '', password: '' });
+  const [touched, setTouched] = useState<Partial<Record<LoginField, boolean>>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const emailInput = useRef<TextInputInstance>(null);
-  const passwordInput = useRef<TextInputInstance>(null);
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
-    mode: 'onChange',
-    defaultValues: { email: '', password: '' },
-  });
+  const emailInput = useRef<TextInputRef>(null);
+  const passwordInput = useRef<TextInputRef>(null);
 
-  const onSubmit = async (values: LoginValues) => {
+  const errors = {
+    email: getEmailError(values.email),
+    password: values.password ? undefined : 'Enter your password.',
+  };
+  const isValid = !errors.email && !errors.password;
+
+  const updateField = (field: LoginField, value: string) => {
+    setValues((current) => ({ ...current, [field]: value }));
     setFeedback(null);
+  };
+
+  const onSubmit = async () => {
+    setSubmitted(true);
+    if (!isValid) {
+      return;
+    }
+
+    setFeedback(null);
+    setIsSubmitting(true);
 
     try {
-      await signIn(values);
+      await signIn({ email: values.email.trim(), password: values.password });
       setFeedback({
         type: 'success',
         message: 'Sign-in request accepted. Session management still needs to be connected.',
       });
     } catch (error) {
       setFeedback({ type: 'error', message: getAuthErrorMessage(error, 'sign in') });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <AuthScreen>
-      <AuthHeader
-        title="Login to Your Account"
-        description=""
-      />
-
-      <View style={styles.formCard}>
-        <View style={styles.form}>
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <AuthInput
-                label="Email"
-                value={value}
-                inputRef={emailInput}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                leftIcon={<Mail size={18} color={AuthColors.textSecondary} strokeWidth={1.8} />}
-                placeholder="Email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                textContentType="emailAddress"
-                returnKeyType="next"
-                onSubmitEditing={() => passwordInput.current?.focus()}
-                error={errors.email?.message}
-              />
-            )}
+    <AuthScreen title="Login to Your Account">
+      <View
+        className="rounded-[14px] border border-[#DDDDDD] bg-[#EEEEEE] px-6 py-[28px] sm:px-[38px]"
+        style={{
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 2,
+        }}>
+        <View className="gap-[14px]">
+          <AuthInput
+            label="Email"
+            value={values.email}
+            inputRef={emailInput}
+            onChangeText={(value) => updateField('email', value)}
+            onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordInput.current?.focus()}
+            error={(touched.email || submitted) ? errors.email : undefined}
           />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <PasswordInput
-                label="Password"
-                value={value}
-                inputRef={passwordInput}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                placeholder="Password"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="current-password"
-                textContentType="password"
-                returnKeyType="done"
-                onSubmitEditing={() => void handleSubmit(onSubmit)()}
-                error={errors.password?.message}
-              />
-            )}
+          <PasswordInput
+            label="Password"
+            value={values.password}
+            inputRef={passwordInput}
+            onChangeText={(value) => updateField('password', value)}
+            onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+            placeholder="Password"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="current-password"
+            returnKeyType="done"
+            onSubmitEditing={() => void onSubmit()}
+            error={(touched.password || submitted) ? errors.password : undefined}
           />
-
-          <View style={styles.optionsRow}>
-            <AuthCheckbox
-              checked={rememberMe}
-              onPress={() => setRememberMe((current) => !current)}
-              label="Remember me"
-            />
-            <Link href="/(auth)/forgot-password" asChild>
-              <Pressable accessibilityRole="link" hitSlop={8}>
-                <Text style={styles.forgotPassword}>Forgot Password?</Text>
-              </Pressable>
-            </Link>
-          </View>
 
           <PrimaryButton
             title="LOGIN"
-            onPress={handleSubmit(onSubmit)}
+            onPress={() => void onSubmit()}
             disabled={!isValid}
             loading={isSubmitting}
           />
+          <View className="mt-[24px] items-center">
+            <Link href="/(auth)/forgot-password" asChild>
+              <Pressable accessibilityRole="link" hitSlop={8}>
+                <Text
+                  className="text-[12px] font-medium text-[#FF9900]"
+                  style={{ fontFamily: 'Arial' }}>
+                  Forgot Password?
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
           {feedback ? (
             <Text
-              style={[
-                styles.feedback,
-                feedback.type === 'error' && styles.feedbackError,
-                feedback.type === 'success' && styles.feedbackSuccess,
-              ]}
+              className={`text-center text-xs leading-[18px] ${
+                feedback.type === 'error' ? 'text-[#DC2626]' : 'text-[#15803D]'
+              }`}
               accessibilityLiveRegion="polite">
               {feedback.message}
             </Text>
@@ -150,42 +141,3 @@ export default function LoginScreen() {
     </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  formCard: {
-    backgroundColor: '#E6E6E6',
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    borderWidth: 1,
-    borderColor: '#E1E1E1',
-  },
-  form: {
-    gap: 20,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-    marginTop: -7,
-  },
-  forgotPassword: {
-    color: AuthColors.primary,
-    fontFamily: AuthFonts.bodySemibold,
-    fontSize: 12,
-  },
-  feedback: {
-    color: AuthColors.textSecondary,
-    fontFamily: AuthFonts.body,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-  },
-  feedbackError: {
-    color: AuthColors.error,
-  },
-  feedbackSuccess: {
-    color: AuthColors.success,
-  },
-});

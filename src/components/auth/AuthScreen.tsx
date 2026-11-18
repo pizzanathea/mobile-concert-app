@@ -1,57 +1,61 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 
-import { AuthColors } from './theme';
+import { AuthHeader } from './AuthHeader';
+import { SiteFooter } from './SiteFooter';
 
 type AuthScreenProps = {
+  title: string;
+  description?: string;
   children: ReactNode;
 };
 
-export function AuthScreen({ children }: AuthScreenProps) {
+export function AuthScreen({ title, description = '', children }: AuthScreenProps) {
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          <Animated.View
-            entering={FadeInDown.duration(420).easing(Easing.linear)}
-            style={styles.content}>
-            {children}
-          </Animated.View>
-          <View style={styles.bottomSpace} />
-        </ScrollView>
-      </KeyboardAvoidingView>
+    <SafeAreaView className="flex-1 bg-[#080500]" edges={['left', 'right', 'bottom']}>
+      <View className="flex-1 bg-white">
+        <SafeAreaView className="bg-white" edges={['top']}>
+          <AuthHeader />
+        </SafeAreaView>
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 24,
+              paddingVertical: 32,
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
+            <Animated.View
+              entering={FadeInDown.duration(420).easing(Easing.linear)}
+              className="w-full max-w-[400px]">
+              <View className="mb-[22px] items-center">
+                <Text
+                  className="text-center text-[34px] font-extrabold leading-[42px] tracking-[-0.8px] text-[#191919]"
+                  style={{ fontFamily: 'Arial' }}>
+                  {title}
+                </Text>
+                {description ? (
+                  <Text
+                    className="mt-2 text-center text-[14px] leading-5 text-[#555555]"
+                    style={{ fontFamily: 'Arial' }}>
+                    {description}
+                  </Text>
+                ) : null}
+              </View>
+              {children}
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
+      <SiteFooter />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: AuthColors.background,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 28,
-  },
-  content: {
-    width: '100%',
-    maxWidth: 460,
-  },
-  bottomSpace: {
-    flexGrow: 1,
-    minHeight: 8,
-  },
-});
